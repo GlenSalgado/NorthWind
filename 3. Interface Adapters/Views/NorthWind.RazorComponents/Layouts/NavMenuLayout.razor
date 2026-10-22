@@ -1,0 +1,30 @@
+@inherits LayoutComponentBase
+
+<div class="page">
+    <div class="sidebar d-print-none">
+        <NavMenu>
+            <NavBarBrand>
+                <SectionOutlet SectionId="NavBarBrandSection" />
+            </NavBarBrand>
+            <NavBarItems>
+                <SectionOutlet SectionId="NavBarItemsSection" />
+            </NavBarItems>
+        </NavMenu>
+    </div>
+
+    <main>
+        <div class="top-row px-4 d-print-none">
+            <SectionOutlet SectionId="HeaderSection" />
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+@code {
+    public static object NavBarBrandSection = new();
+    public static object NavBarItemsSection = new();
+    public static object HeaderSection = new();
+}

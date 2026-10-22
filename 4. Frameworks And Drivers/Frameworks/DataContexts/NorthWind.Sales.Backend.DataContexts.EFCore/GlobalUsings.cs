@@ -1,0 +1,9 @@
+﻿global using NorthWind.Sales.Backend.DataContexts.EFCore.Options;
+global using NorthWind.Sales.Backend.DataContexts.EFCore.Services;
+global using NorthWind.Sales.Backend.Repositories.Interfaces;
+global using NorthWind.Sales.Backend.Repositories.Entities;
+global using Microsoft.EntityFrameworkCore;
+global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.Options;
+global using System.Reflection;
+global using NorthWind.Sales.Backend.DataContexts.EFCore.Guards;

@@ -1,0 +1,34 @@
+<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(App).Assembly"
+            AdditionalAssemblies="AdditionalAssemblies"
+            NotFoundPage="typeof(Pages.NotFound)">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                <Authorizing>
+                    <div class="alert alert-info m-4" role="alert">
+                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                        <span>Comprobando autorización...</span>
+                    </div>
+                </Authorizing>
+                <NotAuthorized>
+                    <div class="alert alert-danger m-4" role="alert">
+                        <h4 class="alert-heading">No autorizado</h4>
+                        <p>No tiene autorización para acceder a esta página. Debe iniciar sesión primero.</p>
+                        <hr />
+                        <a href="user/login" class="btn btn-primary">Iniciar sesión</a>
+                    </div>
+                </NotAuthorized>
+            </AuthorizeRouteView>
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+    </Router>
+</CascadingAuthenticationState>
+
+@code {
+    Assembly[] AdditionalAssemblies =>
+        new Assembly[]
+        {
+            typeof(NorthWind.Sales.Frontend.Views.Pages.CreateOrder).Assembly,
+            MembershipPages.Assembly
+        };
+}

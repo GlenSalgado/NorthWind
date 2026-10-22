@@ -1,0 +1,32 @@
+@inherits NavMenuLayout
+@namespace NorthWind.Sales.Frontend.Views.Layout
+
+<SectionContent SectionId="NavBarBrandSection">
+    <a class="navbar-brand" href="">
+        @CommonMessages.NavBarBrandTitle
+    </a>
+</SectionContent>
+
+<SectionContent SectionId="NavBarItemsSection">
+    <NavMenuItem HRef="" Match="NavLinkMatch.All">
+        @CommonMessages.HomeMenuItemTitle
+    </NavMenuItem>
+
+    <AuthorizeView>
+        <Authorized>
+            <NavMenuItem HRef="CreateOrder">
+                @CreateOrderMessages.CreateOrderMenuItemTitle
+            </NavMenuItem>
+            
+            <NavMenuItem HRef="invoices">
+                Facturas
+            </NavMenuItem>
+        </Authorized>
+    </AuthorizeView>
+</SectionContent>
+
+<SectionContent SectionId="HeaderSection">
+    <LoginDisplayComponent />
+</SectionContent>
+
+@((RenderFragment)(builder => base.BuildRenderTree(builder)))

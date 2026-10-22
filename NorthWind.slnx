@@ -1,0 +1,59 @@
+<Solution>
+  <Folder Name="/1. Enterprise Business Rules/">
+    <Project Path="1. Enterprise Business Rules/NorthWind.DomainLogs.Entities/NorthWind.DomainLogs.Entities.csproj" Id="33091852-d8e8-4478-9f7e-418885ef7fed" />
+    <Project Path="1. Enterprise Business Rules/NorthWind.Entities/NorthWind.Entities.csproj" Id="1ec16589-3b05-40a8-a56f-3a0bb18e0366" />
+    <Project Path="1. Enterprise Business Rules/NorthWind.Events.Entities/NorthWind.Events.Entities.csproj" Id="d4b56273-0a5a-4878-adc8-1873b96b4bd5" />
+    <Project Path="1. Enterprise Business Rules/NorthWind.Exceptions.Entities/NorthWind.Exceptions.Entities.csproj" Id="54a4b993-0530-4a17-9b44-e2fe8861b0be" />
+    <Project Path="1. Enterprise Business Rules/NorthWind.HttpDelegatingHandlers/NorthWind.HttpDelegatingHandlers.csproj" Id="f12172f9-3ba9-47de-b440-709b0f6236c7" />
+    <Project Path="1. Enterprise Business Rules/NorthWind.Result.Entities/NorthWind.Result.Entities.csproj" Id="baabac5f-0237-43e6-a4ef-be9e88faaa2e" />
+    <Project Path="1. Enterprise Business Rules/NorthWind.Sales.Entities/NorthWind.Sales.Entities.csproj" />
+    <Project Path="1. Enterprise Business Rules/NorthWind.Sales.Validators.Entities/NorthWind.Sales.Validators.Entities.csproj" Id="6bd9da5f-8062-4df7-be21-3c40f65a702d" />
+    <Project Path="1. Enterprise Business Rules/NorthWind.Transactions.Entities/NorthWind.Transactions.Entities.csproj" Id="e1472502-5567-47f7-a291-7c43a612c04a" />
+    <Project Path="1. Enterprise Business Rules/NorthWind.Validation.Entities/NorthWind.Validation.Entities.csproj" Id="fecdd92f-c08b-4178-8ef0-79dbb86dc174" />
+  </Folder>
+  <Folder Name="/2. Application Business Rules/">
+    <Project Path="2. Application Business Rules/NorthWind.Sales.Backend.BusinessObjects/NorthWind.Sales.Backend.BusinessObjects.csproj" />
+    <Project Path="2. Application Business Rules/NorthWind.Sales.Backend.UseCases/NorthWind.Sales.Backend.UseCases.csproj" />
+    <Project Path="2. Application Business Rules/NorthWind.Sales.Frontend.BusinessObjects/NorthWind.Sales.Frontend.BusinessObjects.csproj" Id="40b897c1-a1c9-4b8a-a925-e1de59b9baab" />
+  </Folder>
+  <Folder Name="/3. Interface Adapters/" />
+  <Folder Name="/3. Interface Adapters/Controllers/">
+    <Project Path="3. Interface Adapters/Controllers/NorthWind.Sales.Backend.Controllers/NorthWind.Sales.Backend.Controllers.csproj" />
+  </Folder>
+  <Folder Name="/3. Interface Adapters/EmailGateways/">
+    <Project Path="3. Interface Adapters/EmailGateways/NorthWind.Sales.Backend.SmtpGateways/NorthWind.Sales.Backend.SmtpGateways.csproj" Id="16d48f13-0860-4f9f-8f9b-00f7ad01ebf9" />
+  </Folder>
+  <Folder Name="/3. Interface Adapters/Gateways/" />
+  <Folder Name="/3. Interface Adapters/Gateways/Repositories/">
+    <Project Path="3. Interface Adapters/Gateways/Repositories/NorthWind.Sales.Backend.Repositories/NorthWind.Sales.Backend.Repositories.csproj" />
+  </Folder>
+  <Folder Name="/3. Interface Adapters/Gateways/WebApiGateways/">
+    <Project Path="3. Interface Adapters/Gateways/WebApiGateways/NorthWind.Sales.Frontend.WebApiGateways/NorthWind.Sales.Frontend.WebApiGateways.csproj" Id="f7570c65-5f7d-4f9a-9c4b-92760797ad1f" />
+  </Folder>
+  <Folder Name="/3. Interface Adapters/Presenters/">
+    <Project Path="3. Interface Adapters/Presenters/NorthWind.Sales.Backend.Presenters/NorthWind.Sales.Backend.Presenters.csproj" />
+  </Folder>
+  <Folder Name="/3. Interface Adapters/Views/">
+    <Project Path="3. Interface Adapters/Views/NorthWind.RazorComponents/NorthWind.RazorComponents.csproj" Id="d95e618a-b705-444e-af61-4534621b587f" />
+    <Project Path="3. Interface Adapters/Views/NorthWind.Sales.Frontend.Views/NorthWind.Sales.Frontend.Views.csproj" Id="7a5ea262-22bc-40c5-af1a-a0359ce501ff" />
+  </Folder>
+  <Folder Name="/4. Frameworks And Drivers/" />
+  <Folder Name="/4. Frameworks And Drivers/Frameworks/" />
+  <Folder Name="/4. Frameworks And Drivers/Frameworks/DataContexts/">
+    <Project Path="4. Frameworks And Drivers/Frameworks/DataContexts/NorthWind.Sales.Backend.DataContexts.EFCore/NorthWind.Sales.Backend.DataContexts.EFCore.csproj" Id="8eed00bb-e8cb-43d2-8e19-c2745d39bb86" />
+  </Folder>
+  <Folder Name="/4. Frameworks And Drivers/IoC/">
+    <Project Path="4. Frameworks And Drivers/IoC/NorthWind.Sales.Backend.IoC/NorthWind.Sales.Backend.IoC.csproj" Id="ec78dfc1-9550-4780-9c50-72c8c5f095a5" />
+    <Project Path="4. Frameworks And Drivers/IoC/NorthWind.Sales.Frontend.IoC/NorthWind.Sales.Frontend.IoC.csproj" Id="53eda024-bd28-47d6-8664-8b8b99447a51" />
+  </Folder>
+  <Folder Name="/4. Frameworks And Drivers/Libraries/">
+    <Project Path="4. Frameworks And Drivers/Libraries/NorthWind.UserServices/NorthWind.UserServices.csproj" Id="d536a283-fb02-483b-8aea-b81db73c48b3" />
+    <Project Path="4. Frameworks And Drivers/Libraries/NorthWind.ValidationService.FluentValidation/NorthWind.ValidationService.FluentValidation.csproj" Id="4dd3ffbd-47c1-4175-93b8-49b88cce3669" />
+  </Folder>
+  <Folder Name="/4. Frameworks And Drivers/UI/">
+    <Project Path="4. Frameworks And Drivers/UI/NorthWind.Sales.WebApi/NorthWind.Sales.WebApi.csproj" Id="eee13451-4d30-4910-8d71-19db33288660" />
+  </Folder>
+  <Folder Name="/4. Frameworks And Drivers/UIs/">
+    <Project Path="4. Frameworks And Drivers/UIs/NorthWind.Sales.BlazorClient/NorthWind.Sales.BlazorClient.csproj" Id="3a7d2d78-524c-4772-a2ae-5f9431753767" />
+  </Folder>
+</Solution>

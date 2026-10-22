@@ -1,0 +1,450 @@
+@namespace NorthWind.Sales.Frontend.Views.Components
+@using NorthWind.Sales.Entities.Dtos.Customers
+@using NorthWind.Sales.Entities.Dtos.Products
+@using NorthWind.Sales.Frontend.Views.ViewModels.CreateOrder
+@inject NavigationManager Navigation
+
+<div class="pos-container pb-5">
+    <!-- Top Header Banner -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);">
+        <div class="card-body p-4 text-white d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <h2 class="h3 fw-bold mb-1">Punto de Venta (POS) - Facturación</h2>
+                <p class="text-white-50 mb-0">Gestión de órdenes de venta y emisión de facturas</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="invoices" class="btn btn-outline-light px-3 py-2 fw-semibold rounded-pill">
+                    Consultar Facturas
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Alerts: Success or Error -->
+    @if (!string.IsNullOrWhiteSpace(Order.InformationMessage))
+    {
+        <div class="alert alert-success border-0 shadow-sm rounded-4 p-4 mb-4">
+            <h5 class="alert-heading fw-bold mb-1">Transacción completada</h5>
+            <p class="mb-2">@Order.InformationMessage</p>
+            <div class="d-flex gap-2 mt-3">
+                @if (Order.CreatedOrderId.HasValue)
+                {
+                    <a href="invoices/@Order.CreatedOrderId.Value" class="btn btn-success fw-semibold px-4 rounded-pill shadow-sm">
+                        Ver Factura y Generar PDF
+                    </a>
+                }
+                <button type="button" class="btn btn-outline-success fw-medium rounded-pill px-3" @onclick="Order.Reset">
+                    Nueva Venta
+                </button>
+            </div>
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Order.ErrorMessage))
+    {
+        <div class="alert alert-danger border-0 shadow-sm rounded-4 p-4 mb-4">
+            <h5 class="alert-heading fw-bold mb-1">Transacción no completada</h5>
+            <p class="mb-2">@Order.ErrorMessage</p>
+            @if (Order.ValidationErrors.Count > 0)
+            {
+                <ul class="mb-0 ps-3 mt-2">
+                    @foreach (var err in Order.ValidationErrors)
+                    {
+                        <li class="small">@err</li>
+                    }
+                </ul>
+            }
+        </div>
+    }
+
+    <!-- Main Order Form (Master / Detail) -->
+    <EditForm Model="Order" OnValidSubmit="Order.Send">
+        <ModelValidator Validator="Order.Validator" @ref="Order.ModelValidatorComponentReference" />
+
+        <div class="row g-4">
+            <!-- LEFT COLUMN: Master / Header Information -->
+            <div class="col-lg-5">
+                <div class="card border-0 shadow-sm rounded-4 h-100">
+                    <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+                        <h5 class="card-title fw-bold mb-0">Datos del Cliente</h5>
+                        <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill font-monospace">
+                            @Order.OrderDate.ToString("dd/MM/yyyy HH:mm")
+                        </span>
+                    </div>
+
+                    <div class="card-body p-4">
+                        <!-- Customer Selection Button -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-dark d-flex justify-content-between">
+                                <span>Cliente</span>
+                                @if (Order.SelectedCustomer != null)
+                                {
+                                    <span class="badge bg-success bg-opacity-10 text-success">Cliente Seleccionado</span>
+                                }
+                            </label>
+
+                            @if (Order.SelectedCustomer != null)
+                            {
+                                <div class="d-flex gap-2 mb-2">
+                                    <button type="button" class="btn btn-outline-primary fw-semibold" @onclick="OpenCustomerModal">
+                                        Cambiar
+                                    </button>
+                                    <button type="button" class="btn btn-outline-danger fw-semibold" @onclick="Order.ClearCustomer">
+                                        Limpiar
+                                    </button>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="d-grid mb-2">
+                                    <button type="button"
+                                            class="btn btn-primary btn-lg rounded-3 fw-semibold shadow-sm"
+                                            @onclick="OpenCustomerModal">
+                                        Buscar Cliente
+                                    </button>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- All Customer Saved Data - LOCKED / READONLY -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary small">
+                                ID / Código
+                            </label>
+                            <input type="text"
+                                   class="form-control bg-light"
+                                   readonly
+                                   disabled
+                                   placeholder="Seleccione un cliente"
+                                   value="@Order.CustomerId" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary small">
+                                Nombre del Cliente
+                            </label>
+                            <input type="text"
+                                   class="form-control bg-light"
+                                   readonly
+                                   disabled
+                                   placeholder="Seleccione un cliente"
+                                   value="@Order.CustomerName" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary small">
+                                Cédula de Identidad
+                            </label>
+                            <input type="text"
+                                   class="form-control bg-light"
+                                   readonly
+                                   disabled
+                                   placeholder="Seleccione un cliente"
+                                   value="@Order.CustomerCedula" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary small">
+                                Correo Electrónico
+                            </label>
+                            <input type="text"
+                                   class="form-control bg-light"
+                                   readonly
+                                   disabled
+                                   placeholder="Seleccione un cliente"
+                                   value="@Order.CustomerEmail" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary small">
+                                Saldo Actual
+                            </label>
+                            <input type="text"
+                                   class="form-control @(Order.SelectedCustomer?.CurrentBalance > 0 ? "border-danger bg-danger bg-opacity-10" : "bg-light")"
+                                   readonly
+                                   disabled
+                                   placeholder="0.00"
+                                   value="@(Order.SelectedCustomer != null ? Order.SelectedCustomer.CurrentBalance.ToString("N2") : "")" />
+                        </div>
+
+                        @if (Order.SelectedCustomer?.CurrentBalance > 0)
+                        {
+                            <div class="alert alert-danger border-danger py-2 px-3 rounded-3 d-flex align-items-start gap-2 mb-0">
+                                <span style="font-size:1.1rem;">⚠️</span>
+                                <div class="small">
+                                    <strong>Cliente con deuda pendiente.</strong><br />
+                                    Este cliente tiene un saldo de <strong>$@Order.SelectedCustomer.CurrentBalance.ToString("N2")</strong>.
+                                    La orden será rechazada al intentar guardar.
+                                </div>
+                            </div>
+                        }
+
+                        <hr class="my-4 text-muted opacity-25" />
+                        <h6 class="fw-bold text-dark mb-3">Dirección de Entrega</h6>
+
+                        <!-- Ship Address: Editable -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary small">
+                                Dirección de Envío <span class="text-danger">*</span>
+                            </label>
+                            <input type="text"
+                                   class="form-control"
+                                   maxlength="60"
+                                   placeholder="Dirección de entrega"
+                                   value="@Order.ShipAddress"
+                                   @oninput="e => Order.ShipAddress = FilterAddress(e.Value?.ToString())" />
+                        </div>
+
+                        <!-- Ship City and Country -->
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-secondary small">
+                                    Ciudad <span class="text-danger">*</span>
+                                </label>
+                                <input type="text"
+                                       class="form-control"
+                                       maxlength="15"
+                                       placeholder="Ciudad"
+                                       value="@Order.ShipCity"
+                                       @oninput="e => Order.ShipCity = FilterLetters(e.Value?.ToString())" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-secondary small">
+                                    País <span class="text-danger">*</span>
+                                </label>
+                                <input type="text"
+                                       class="form-control"
+                                       maxlength="15"
+                                       placeholder="País"
+                                       value="@Order.ShipCountry"
+                                       @oninput="e => Order.ShipCountry = FilterLetters(e.Value?.ToString())" />
+                            </div>
+                        </div>
+
+                        <!-- Ship Postal Code -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary small">
+                                Código Postal
+                            </label>
+                            <input type="text"
+                                   class="form-control"
+                                   maxlength="10"
+                                   inputmode="numeric"
+                                   placeholder="Código Postal"
+                                   value="@Order.ShipPostalCode"
+                                   @oninput="e => Order.ShipPostalCode = FilterDigits(e.Value?.ToString())" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: Detail / Items & Calculations -->
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-header bg-white border-bottom py-3 px-4">
+                        <h5 class="card-title fw-bold mb-0">Detalle de Productos</h5>
+                    </div>
+
+                    <div class="card-body p-4">
+                        @if (Order.OrderDetails.Count == 0)
+                        {
+                            <div class="text-center py-5 border rounded-3 bg-light bg-opacity-50">
+                                <h6 class="fw-bold text-secondary">No hay productos en la orden de venta</h6>
+                                <p class="text-muted small mb-3">Presione el botón para seleccionar productos.</p>
+                                <button type="button" class="btn btn-outline-success fw-semibold px-4" @onclick="OpenAddProductModal">
+                                    Agregar Producto
+                                </button>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="table-responsive rounded-3 border">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="ps-3" style="width: 5%;">#</th>
+                                            <th style="width: 35%;">Producto</th>
+                                            <th class="text-center" style="width: 15%;">Stock</th>
+                                            <th class="text-end" style="width: 15%;">Precio Unit.</th>
+                                            <th class="text-center" style="width: 15%;">Cantidad</th>
+                                            <th class="text-end" style="width: 15%;">Subtotal</th>
+                                            <th class="text-center pe-3" style="width: 10%;">Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @for (int i = 0; i < Order.OrderDetails.Count; i++)
+                                        {
+                                            var index = i;
+                                            var item = Order.OrderDetails[index];
+
+                                            <tr @key="item">
+                                                <td class="ps-3 text-muted small">@(index + 1)</td>
+                                                <td>
+                                                    <div class="fw-semibold text-dark">@item.ProductName</div>
+                                                    <div class="text-muted small font-monospace">ID: #@item.ProductId</div>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="badge bg-light text-dark border px-2 py-1">
+                                                        @item.UnitsInStock u.
+                                                    </span>
+                                                </td>
+                                                <td class="text-end font-monospace text-secondary">
+                                                    @item.UnitPrice.ToString("N2")
+                                                </td>
+                                                <td class="text-center">
+                                            <input type="number"
+                                                           class="form-control form-control-sm text-center font-monospace fw-bold mx-auto"
+                                                           style="width: 75px;"
+                                                           min="1"
+                                                           max="@item.UnitsInStock"
+                                                   step="1"
+                                                   @bind="item.Quantity"
+                                                   @bind:event="oninput" />
+                                                    @if (item.Quantity > item.UnitsInStock)
+                                                    {
+                                                        <div class="text-danger small mt-1" style="font-size: 0.7rem;">Excede stock</div>
+                                                    }
+                                                </td>
+                                                <td class="text-end font-monospace fw-bold text-dark">
+                                                    @item.Subtotal.ToString("N2")
+                                                </td>
+                                                <td class="text-center pe-3">
+                                                    <div class="btn-group btn-group-sm">
+                                                        <button type="button"
+                                                                class="btn btn-outline-primary"
+                                                                @onclick="() => OpenReplaceProductModal(item)">
+                                                            Actualizar
+                                                        </button>
+                                                        <button type="button"
+                                                                class="btn btn-outline-danger"
+                                                                @onclick="() => Order.RemoveOrderDetailItem(item)">
+                                                            Eliminar
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="mt-3">
+                                <button type="button" class="btn btn-outline-success fw-semibold px-4" @onclick="OpenAddProductModal">
+                                    Agregar Producto
+                                </button>
+                            </div>
+                        }
+
+                        <!-- Real-time Totals and IVA Section -->
+                        <div class="row justify-content-end mt-4">
+                            <div class="col-md-7">
+                                <div class="bg-light p-3 rounded-4 border">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="text-muted">Subtotal:</span>
+                                        <span class="font-monospace fw-bold fs-6">@Order.Subtotal.ToString("N2")</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="text-muted">IVA (15%):</span>
+                                        <span class="font-monospace fw-bold fs-6 text-secondary">@Order.Vat.ToString("N2")</span>
+                                    </div>
+                                    <hr class="my-2" />
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="fw-bold fs-5 text-dark">TOTAL FACTURA:</span>
+                                        <span class="font-monospace fw-bold fs-4 text-primary">$@Order.Total.ToString("N2")</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons Bar -->
+                        <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top gap-2">
+                            <button type="button" class="btn btn-outline-secondary px-4 fw-medium rounded-pill" @onclick="Order.Reset">
+                                Limpiar
+                            </button>
+
+                            <button type="submit"
+                                    class="btn btn-primary btn-lg px-5 fw-bold rounded-pill shadow"
+                                    disabled="@(Order.IsSubmitting || Order.OrderDetails.Count == 0 || string.IsNullOrEmpty(Order.CustomerId))"
+                                    title="@(string.IsNullOrEmpty(Order.CustomerId) ? "Debe seleccionar un cliente" : Order.OrderDetails.Count == 0 ? "Debe agregar al menos un producto" : "Guardar la factura")">
+                                @if (Order.IsSubmitting)
+                                {
+                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                    <span>Procesando Venta...</span>
+                                }
+                                else
+                                {
+                                    <span>Guardar Factura</span>
+                                }
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </EditForm>
+</div>
+
+<!-- Modal 2: Customer Search -->
+<CustomerSearchModal @bind-IsVisible="IsCustomerModalOpen"
+                     OnCustomerSelected="OnCustomerSelectedHandler" />
+
+<!-- Modal 3: Product Search -->
+<ProductSearchModal @bind-IsVisible="IsProductModalOpen"
+                    ExcludedProductIds="CurrentProductIds"
+                    IsReplaceMode="IsReplacingProduct"
+                    CurrentEditingProductId="ItemBeingReplaced?.ProductId"
+                    OnProductSelected="OnProductSelectedHandler" />
+
+@code {
+    bool IsCustomerModalOpen = false;
+    bool IsProductModalOpen = false;
+    bool IsReplacingProduct = false;
+    CreateOrderDetailViewModel? ItemBeingReplaced;
+
+    List<int> CurrentProductIds => Order.OrderDetails.Select(d => d.ProductId).ToList();
+
+    static string FilterLetters(string? value) => new((value ?? string.Empty)
+        .Where(c => char.IsLetter(c) || char.IsWhiteSpace(c)).ToArray());
+
+    static string FilterDigits(string? value) => new((value ?? string.Empty)
+        .Where(char.IsDigit).Take(10).ToArray());
+
+    static string FilterAddress(string? value) => new((value ?? string.Empty)
+        .Where(c => char.IsLetterOrDigit(c) || char.IsWhiteSpace(c) || "#.,-/º°".Contains(c)).Take(60).ToArray());
+
+    void OpenCustomerModal()
+    {
+        IsCustomerModalOpen = true;
+    }
+
+    void OnCustomerSelectedHandler(CustomerDto customer)
+    {
+        Order.SelectCustomer(customer);
+    }
+
+    void OpenAddProductModal()
+    {
+        IsReplacingProduct = false;
+        ItemBeingReplaced = null;
+        IsProductModalOpen = true;
+    }
+
+    void OpenReplaceProductModal(CreateOrderDetailViewModel item)
+    {
+        IsReplacingProduct = true;
+        ItemBeingReplaced = item;
+        IsProductModalOpen = true;
+    }
+
+    void OnProductSelectedHandler(ProductDto product)
+    {
+        if (IsReplacingProduct && ItemBeingReplaced != null)
+        {
+            Order.UpdateProduct(ItemBeingReplaced, product);
+        }
+        else
+        {
+            Order.AddProduct(product, 1);
+        }
+    }
+}

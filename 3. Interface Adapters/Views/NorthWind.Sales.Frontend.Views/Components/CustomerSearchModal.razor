@@ -1,0 +1,227 @@
+@namespace NorthWind.Sales.Frontend.Views.Components
+@using NorthWind.Sales.Entities.Dtos.Customers
+@using NorthWind.Sales.Entities.Dtos.Pagination
+@using NorthWind.Sales.Frontend.BusinessObjects.Interfaces
+@inject ICustomerGateway CustomerGateway
+
+@if (IsVisible)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px);" role="dialog">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content shadow-lg border-0 rounded-4">
+                <div class="modal-header bg-primary text-white px-4 py-3">
+                    <h5 class="modal-title fw-bold mb-0">Búsqueda de Clientes</h5>
+                    <button type="button" class="btn-close btn-close-white" aria-label="Close" @onclick="CloseModal"></button>
+                </div>
+
+                <div class="modal-body p-4">
+                    <!-- Search Input Box -->
+                    <div class="row g-2 mb-3 align-items-center">
+                        <div class="col-md-3">
+                            <select class="form-select" @bind="SearchBy" @bind:after="SearchCriteriaChanged" aria-label="Buscar clientes por">
+                                <option value="all">Todas</option>
+                                <option value="id">ID</option>
+                                <option value="name">Nombre</option>
+                                <option value="cedula">Cédula</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <input type="@(SearchBy == "cedula" ? "number" : "text")"
+                                       class="form-control"
+                                       inputmode="@(SearchBy == "cedula" ? "numeric" : null)"
+                                       placeholder="@(SearchBy == "id" ? "Buscar por ID..." : SearchBy == "name" ? "Buscar por nombre..." : SearchBy == "cedula" ? "Buscar por cédula..." : "Buscar por ID, cédula o nombre...")"
+                                       @bind="SearchText"
+                                       @bind:event="oninput"
+                                       @onkeyup="OnSearchKeyUp" />
+                                @if (!string.IsNullOrEmpty(SearchText))
+                                {
+                                    <button class="btn btn-outline-secondary" type="button" @onclick="ClearSearch">Limpiar</button>
+                                }
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-primary w-100 fw-semibold" type="button" @onclick="() => LoadCustomers(1)">
+                                Buscar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Loading Indicator -->
+                    @if (IsLoading)
+                    {
+                        <div class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status" style="width: 2.5rem; height: 2.5rem;">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                            <p class="text-muted mt-2 fw-medium">Consultando clientes...</p>
+                        </div>
+                    }
+                    else if (CustomersPage == null || CustomersPage.Items.Count == 0)
+                    {
+                        <div class="alert alert-warning text-center py-4 rounded-3 border-0 shadow-sm">
+                            <h6 class="fw-bold mb-1">No se encontraron clientes</h6>
+                            <p class="mb-0 text-muted">No hay registros que coincidan con la búsqueda.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive rounded-3 border">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-3" style="width: 20%;">ID / Código</th>
+                                        <th style="width: 45%;">Nombre del Cliente</th>
+                                        <th class="text-end" style="width: 20%;">Saldo Actual</th>
+                                        <th class="text-center pe-3" style="width: 15%;">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var customer in CustomersPage.Items)
+                                    {
+                                        <tr>
+                                            <td class="ps-3">
+                                                <span class="badge bg-secondary font-monospace px-2 py-1">@customer.Id</span>
+                                            </td>
+                                            <td class="fw-medium text-dark">
+                                                @customer.Name
+                                            </td>
+                                            <td class="text-end font-monospace">
+                                                @if (customer.CurrentBalance > 0)
+                                                {
+                                                    <span class="text-danger fw-bold">@customer.CurrentBalance.ToString("N2")</span>
+                                                    <span class="ms-1 badge bg-danger bg-opacity-10 text-danger border border-danger px-2" title="Cliente con saldo pendiente">⚠️ Deuda</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">@customer.CurrentBalance.ToString("N2")</span>
+                                                }
+                                            </td>
+                                            <td class="text-center pe-3">
+                                                <button type="button"
+                                                        class="btn btn-sm @(customer.CurrentBalance > 0 ? "btn-warning" : "btn-success") px-3 fw-semibold shadow-sm"
+                                                        @onclick="() => SelectCustomer(customer)"
+                                                        title="@(customer.CurrentBalance > 0 ? "Este cliente tiene saldo pendiente. La orden será rechazada." : "Seleccionar cliente")">
+                                                    Seleccionar
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        <div class="d-flex flex-wrap justify-content-between align-items-center mt-3 pt-2 border-top">
+                            <div class="text-muted small">
+                                Mostrando <strong>@CustomersPage.Items.Count</strong> de <strong>@CustomersPage.TotalItems</strong> clientes
+                                (Pág. @CustomersPage.PageNumber de @CustomersPage.TotalPages)
+                            </div>
+
+                            <nav aria-label="Paginación">
+                                <ul class="pagination pagination-sm mb-0">
+                                    <li class="page-item @(CustomersPage.HasPreviousPage ? "" : "disabled")">
+                                        <button class="page-link" @onclick="() => LoadCustomers(CustomersPage.PageNumber - 1)">
+                                            Anterior
+                                        </button>
+                                    </li>
+
+                                    @for (int p = 1; p <= CustomersPage.TotalPages; p++)
+                                    {
+                                        var pageIndex = p;
+                                        <li class="page-item @(pageIndex == CustomersPage.PageNumber ? "active" : "")">
+                                            <button class="page-link" @onclick="() => LoadCustomers(pageIndex)">
+                                                @pageIndex
+                                            </button>
+                                        </li>
+                                    }
+
+                                    <li class="page-item @(CustomersPage.HasNextPage ? "" : "disabled")">
+                                        <button class="page-link" @onclick="() => LoadCustomers(CustomersPage.PageNumber + 1)">
+                                            Siguiente
+                                        </button>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
+                    }
+                </div>
+
+                <div class="modal-footer bg-light px-4 py-3">
+                    <button type="button" class="btn btn-secondary px-4 fw-medium" @onclick="CloseModal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
+    [Parameter] public EventCallback<CustomerDto> OnCustomerSelected { get; set; }
+
+    string SearchText = string.Empty;
+    string SearchBy = "all";
+    bool IsLoading = false;
+    PagedResult<CustomerDto>? CustomersPage;
+    int CurrentPage = 1;
+    const int PageSize = 5;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (IsVisible && CustomersPage == null)
+        {
+            await LoadCustomers(1);
+        }
+    }
+
+    async Task LoadCustomers(int page)
+    {
+        CurrentPage = page;
+        IsLoading = true;
+        try
+        {
+            CustomersPage = await CustomerGateway.SearchCustomersAsync(SearchText, SearchBy, CurrentPage, PageSize);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar clientes: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    async Task OnSearchKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await LoadCustomers(1);
+        }
+    }
+
+    async Task ClearSearch()
+    {
+        SearchText = string.Empty;
+        await LoadCustomers(1);
+    }
+
+    async Task SearchCriteriaChanged()
+    {
+        SearchText = string.Empty;
+        await LoadCustomers(1);
+    }
+
+    async Task SelectCustomer(CustomerDto customer)
+    {
+        await OnCustomerSelected.InvokeAsync(customer);
+        await CloseModal();
+    }
+
+    async Task CloseModal()
+    {
+        IsVisible = false;
+        await IsVisibleChanged.InvokeAsync(false);
+    }
+}

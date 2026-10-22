@@ -10,7 +10,6 @@
     <ProjectReference Include="..\..\1. Enterprise Business Rules\NorthWind.Events.Entities\NorthWind.Events.Entities.csproj" />
     <ProjectReference Include="..\..\1. Enterprise Business Rules\NorthWind.Exceptions.Entities\NorthWind.Exceptions.Entities.csproj" />
     <ProjectReference Include="..\..\1. Enterprise Business Rules\NorthWind.Sales.Entities\NorthWind.Sales.Entities.csproj" />
-    <ProjectReference Include="..\..\1. Enterprise Business Rules\NorthWind.Transactions.Entities\NorthWind.Transactions.Entities.csproj" />
     <ProjectReference Include="..\..\1. Enterprise Business Rules\NorthWind.Validation.Entities\NorthWind.Validation.Entities.csproj" />
   </ItemGroup>
 </Project>

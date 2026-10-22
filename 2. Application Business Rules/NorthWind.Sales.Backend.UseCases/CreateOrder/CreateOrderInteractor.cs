@@ -4,7 +4,7 @@ using NorthWind.DomainLogs.Entities.Interfaces;
 using NorthWind.DomainLogs.Entities.ValueObjects;
 using NorthWind.Entities.Guards;
 using NorthWind.Entities.Interfaces;
-using NorthWind.Transactions.Entities.Interfaces;
+using Microsoft.Extensions.Logging;
 
 internal class CreateOrderInteractor(
     ICreateOrderOutputPort outputPort,
@@ -12,8 +12,8 @@ internal class CreateOrderInteractor(
     IModelValidatorHub<CreateOrderDto> modelValidatorHub,
     IDomainEventHub<SpecialOrderCreatedEvent> domainEventHandler,
     IDomainLogger domainLogger,
-    IDomainTransaction domainTransaction,
-    IUserService userService) : ICreateOrderInputPort
+    IUserService userService,
+    ILogger<CreateOrderInteractor> logger) : ICreateOrderInputPort
 {
     public async Task Handle(CreateOrderDto orderDto)
     {
@@ -22,7 +22,7 @@ internal class CreateOrderInteractor(
 
         await GuardModel.AgainstNotValid(modelValidatorHub, orderDto);
 
-        await domainLogger.LogInformation(new DomainLog(
+        await TryLogAsync(new DomainLog(
             CreateOrderMessages.StartingPurchaseOrderCreation,
             userService.UserName));
 
@@ -30,42 +30,61 @@ internal class CreateOrderInteractor(
 
         try
         {
-            // Iniciar la transacción
-            domainTransaction.BeginTransaction();
-
             await repository.CreateOrder(Order);
             await repository.SaveChanges();
-
-            await domainLogger.LogInformation(new DomainLog(
-                string.Format(CreateOrderMessages.PurchaseOrderCreatedTemplate,
-                    Order.Id),
-                userService.UserName));
-
-            await outputPort.Handle(Order);
-
-            if (new SpecialOrderSpecification().IsSatisfiedBy(Order))
-            {
-                await domainEventHandler.Raise(
-                    new SpecialOrderCreatedEvent(
-                        Order.Id, Order.OrderDetails.Count));
-            }
-
-            // Aceptar la transacción
-            domainTransaction.CommitTransaction();
         }
-        catch
+        catch (Exception exception)
         {
-            // Cancelar la transacción
-            domainTransaction.RollbackTransaction();
+            logger.LogError(exception, "Error while saving sales order {OrderId}", Order.Id);
 
             string Information = string.Format(
                 CreateOrderMessages.OrderCreationCancelledTemplate,
                 Order.Id);
 
-            await domainLogger.LogInformation(
+            await TryLogAsync(
                 new DomainLog(Information, userService.UserName));
 
             throw;
+        }
+
+        // EF Core saves the order, its details, and stock changes in one
+        // database transaction. Logging and email use separate resources and
+        // must not enlist in a Windows-only distributed transaction.
+        await outputPort.Handle(Order);
+        await TryLogAsync(new DomainLog(
+            string.Format(CreateOrderMessages.PurchaseOrderCreatedTemplate,
+                Order.Id),
+            userService.UserName));
+
+        if (new SpecialOrderSpecification().IsSatisfiedBy(Order))
+        {
+            try
+            {
+                await domainEventHandler.Raise(
+                    new SpecialOrderCreatedEvent(
+                        Order.Id, Order.OrderDetails.Count));
+            }
+            catch (Exception exception)
+            {
+                // The order is already committed; an email failure must not
+                // report the completed order as failed and invite a duplicate.
+                logger.LogError(exception,
+                    "Order {OrderId} was saved, but its notification failed",
+                    Order.Id);
+            }
+        }
+    }
+
+    private async Task TryLogAsync(DomainLog log)
+    {
+        try
+        {
+            await domainLogger.LogInformation(log);
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception,
+                "Could not write a domain log for sales order processing");
         }
     }
 }

@@ -33,7 +33,7 @@
                         Ver Factura y Generar PDF
                     </a>
                 }
-                <button type="button" class="btn btn-outline-success fw-medium rounded-pill px-3" @onclick="Order.Reset">
+                <button type="button" class="btn btn-outline-success fw-medium rounded-pill px-3" @onclick="ConfirmNewSale">
                     Nueva Venta
                 </button>
             </div>
@@ -86,10 +86,10 @@
                             @if (Order.SelectedCustomer != null)
                             {
                                 <div class="d-flex gap-2 mb-2">
-                                    <button type="button" class="btn btn-outline-primary fw-semibold" @onclick="OpenCustomerModal">
+                                    <button type="button" class="btn btn-outline-primary fw-semibold" @onclick="ConfirmChangeCustomer">
                                         Cambiar
                                     </button>
-                                    <button type="button" class="btn btn-outline-danger fw-semibold" @onclick="Order.ClearCustomer">
+                                    <button type="button" class="btn btn-outline-danger fw-semibold" @onclick="ConfirmClearCustomer">
                                         Limpiar
                                     </button>
                                 </div>
@@ -317,7 +317,7 @@
                                                         </button>
                                                         <button type="button"
                                                                 class="btn btn-outline-danger"
-                                                                @onclick="() => Order.RemoveOrderDetailItem(item)">
+                                                                @onclick="() => ConfirmRemoveProduct(item)">
                                                             Eliminar
                                                         </button>
                                                     </div>
@@ -358,7 +358,7 @@
 
                         <!-- Action Buttons Bar -->
                         <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top gap-2">
-                            <button type="button" class="btn btn-outline-secondary px-4 fw-medium rounded-pill" @onclick="Order.Reset">
+                            <button type="button" class="btn btn-outline-secondary px-4 fw-medium rounded-pill" @onclick="ConfirmClearSale">
                                 Limpiar
                             </button>
 
@@ -384,6 +384,33 @@
     </EditForm>
 </div>
 
+@if (IsConfirmationOpen)
+{
+    <div class="modal fade show d-block" tabindex="-1"
+         style="background-color: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px);"
+         role="dialog" aria-modal="true" aria-labelledby="order-confirmation-title">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg border-0 rounded-4">
+                <div class="modal-header bg-warning-subtle px-4 py-3">
+                    <h5 id="order-confirmation-title" class="modal-title fw-bold mb-0">@ConfirmationTitle</h5>
+                    <button type="button" class="btn-close" aria-label="Cerrar" @onclick="CancelConfirmation"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="mb-0">@ConfirmationMessage</p>
+                </div>
+                <div class="modal-footer bg-light px-4 py-3">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4" @onclick="CancelConfirmation">
+                        Cancelar
+                    </button>
+                    <button type="button" class="btn @ConfirmationButtonClass rounded-pill px-4" @onclick="ConfirmPendingAction">
+                        @ConfirmationButtonText
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 <!-- Modal 2: Customer Search -->
 <CustomerSearchModal @bind-IsVisible="IsCustomerModalOpen"
                      OnCustomerSelected="OnCustomerSelectedHandler" />
@@ -399,7 +426,13 @@
     bool IsCustomerModalOpen = false;
     bool IsProductModalOpen = false;
     bool IsReplacingProduct = false;
+    bool IsConfirmationOpen = false;
     CreateOrderDetailViewModel? ItemBeingReplaced;
+    System.Action? PendingConfirmation;
+    string ConfirmationTitle = string.Empty;
+    string ConfirmationMessage = string.Empty;
+    string ConfirmationButtonText = "Confirmar";
+    string ConfirmationButtonClass = "btn-danger";
 
     List<int> CurrentProductIds => Order.OrderDetails.Select(d => d.ProductId).ToList();
 
@@ -415,6 +448,82 @@
     void OpenCustomerModal()
     {
         IsCustomerModalOpen = true;
+    }
+
+    void ConfirmChangeCustomer()
+    {
+        RequestConfirmation(
+            "¿Cambiar cliente?",
+            "¿Seguro que quieres cambiar el cliente de esta orden?",
+            "Sí, cambiar",
+            OpenCustomerModal,
+            "btn-primary");
+    }
+
+    void ConfirmClearCustomer()
+    {
+        RequestConfirmation(
+            "¿Limpiar cliente?",
+            "¿Seguro que quieres quitar el cliente seleccionado de esta orden?",
+            "Sí, limpiar",
+            Order.ClearCustomer);
+    }
+
+    void ConfirmRemoveProduct(CreateOrderDetailViewModel item)
+    {
+        RequestConfirmation(
+            "¿Eliminar producto?",
+            $"¿Seguro que quieres eliminar '{item.ProductName}' de esta orden?",
+            "Sí, eliminar",
+            () => Order.RemoveOrderDetailItem(item));
+    }
+
+    void ConfirmNewSale()
+    {
+        RequestConfirmation(
+            "¿Iniciar nueva venta?",
+            "¿Seguro que quieres iniciar una nueva venta? Se limpiarán los datos actuales de la factura.",
+            "Sí, nueva venta",
+            Order.Reset,
+            "btn-success");
+    }
+
+    void ConfirmClearSale()
+    {
+        RequestConfirmation(
+            "¿Limpiar factura?",
+            "¿Seguro que quieres limpiar la factura actual? Se quitarán el cliente y todos los productos agregados.",
+            "Sí, limpiar factura",
+            Order.Reset);
+    }
+
+    void RequestConfirmation(
+        string title,
+        string message,
+        string confirmText,
+        System.Action action,
+        string buttonClass = "btn-danger")
+    {
+        ConfirmationTitle = title;
+        ConfirmationMessage = message;
+        ConfirmationButtonText = confirmText;
+        ConfirmationButtonClass = buttonClass;
+        PendingConfirmation = action;
+        IsConfirmationOpen = true;
+    }
+
+    void CancelConfirmation()
+    {
+        IsConfirmationOpen = false;
+        PendingConfirmation = null;
+    }
+
+    void ConfirmPendingAction()
+    {
+        var action = PendingConfirmation;
+        IsConfirmationOpen = false;
+        PendingConfirmation = null;
+        action?.Invoke();
     }
 
     void OnCustomerSelectedHandler(CustomerDto customer)

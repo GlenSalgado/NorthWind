@@ -3,6 +3,7 @@ namespace NorthWind.Sales.WebApi;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
@@ -39,6 +40,13 @@ internal static class Startup
                 builder.Configuration
                     .GetSection(JwtOptions.SectionKey)
                     .Bind(jwtOptions));
+
+        // Reject whitespace and any unsupported characters in account usernames.
+        builder.Services.Configure<IdentityOptions>(options =>
+        {
+            options.User.AllowedUserNameCharacters =
+                "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
+        });
 
         // Agregar el servicio CORS para clientes que se ejecutan
         // en el navegador Web (como Blazor WebAssembly).

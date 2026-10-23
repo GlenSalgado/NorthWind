@@ -206,7 +206,13 @@
                                        maxlength="15"
                                        placeholder="Ciudad"
                                        value="@Order.ShipCity"
-                                       @oninput="e => Order.ShipCity = FilterLetters(e.Value?.ToString())" />
+                                       @oninput="HandleShipCityInput" />
+                                @if (ShowCityInputWarning)
+                                {
+                                    <div class="form-text text-danger" role="status" aria-live="polite">
+                                        Solo se permiten letras y espacios; los números se bloquearon.
+                                    </div>
+                                }
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold text-secondary small">
@@ -217,7 +223,13 @@
                                        maxlength="15"
                                        placeholder="País"
                                        value="@Order.ShipCountry"
-                                       @oninput="e => Order.ShipCountry = FilterLetters(e.Value?.ToString())" />
+                                       @oninput="HandleShipCountryInput" />
+                                @if (ShowCountryInputWarning)
+                                {
+                                    <div class="form-text text-danger" role="status" aria-live="polite">
+                                        Solo se permiten letras y espacios; los números se bloquearon.
+                                    </div>
+                                }
                             </div>
                         </div>
 
@@ -427,6 +439,8 @@
     bool IsProductModalOpen = false;
     bool IsReplacingProduct = false;
     bool IsConfirmationOpen = false;
+    bool ShowCityInputWarning;
+    bool ShowCountryInputWarning;
     CreateOrderDetailViewModel? ItemBeingReplaced;
     System.Action? PendingConfirmation;
     string ConfirmationTitle = string.Empty;
@@ -444,6 +458,22 @@
 
     static string FilterAddress(string? value) => new((value ?? string.Empty)
         .Where(c => char.IsLetterOrDigit(c) || char.IsWhiteSpace(c) || "#.,-/º°".Contains(c)).Take(60).ToArray());
+
+    void HandleShipCityInput(ChangeEventArgs e)
+    {
+        var enteredValue = e.Value?.ToString() ?? string.Empty;
+        var filteredValue = FilterLetters(enteredValue);
+        ShowCityInputWarning = filteredValue.Length != enteredValue.Length;
+        Order.ShipCity = filteredValue;
+    }
+
+    void HandleShipCountryInput(ChangeEventArgs e)
+    {
+        var enteredValue = e.Value?.ToString() ?? string.Empty;
+        var filteredValue = FilterLetters(enteredValue);
+        ShowCountryInputWarning = filteredValue.Length != enteredValue.Length;
+        Order.ShipCountry = filteredValue;
+    }
 
     void OpenCustomerModal()
     {
